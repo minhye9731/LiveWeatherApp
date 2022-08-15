@@ -6,11 +6,36 @@
 //
 
 import UIKit
+import MapKit
 
 class MainViewController: UIViewController {
-
     
+    @IBOutlet var configureUIViews: [UIView]!
     
+    @IBOutlet weak var locationButton: UIButton!
+    @IBOutlet weak var currentLocationLabel: UILabel!
+    
+    @IBOutlet var weatherBackgroundUIView: [UIView]!
+    
+    @IBOutlet weak var weatherIconUIImage: UIImageView!
+    @IBOutlet weak var mainWeatherLabel: UILabel!
+    @IBOutlet weak var descriptionWeatherLabel: UILabel!
+    
+    @IBOutlet weak var temperatureIconUIImage: UIImageView!
+    @IBOutlet weak var currentTemperatureLabel: UILabel!
+    @IBOutlet weak var minmaxTemperatureLabel: UILabel!
+    @IBOutlet weak var feelTemperatureLabel: UILabel!
+    
+    @IBOutlet weak var humidityIconUIImage: UIImageView!
+    @IBOutlet weak var currentHumidityLabel: UILabel!
+    
+    @IBOutlet weak var windIconUIImage: UIImageView!
+    @IBOutlet weak var currentWindSpeedLabel: UILabel!
+    @IBOutlet weak var currentWindDegLabel: UILabel!
+    
+    @IBOutlet weak var mapView: MKMapView!
+    
+    @IBOutlet weak var downscrollButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,8 +48,23 @@ class MainViewController: UIViewController {
     }
     
     
+    
+    
+    
+    
 
 }
+
+
+
+
+
+
+
+
+
+
+
 
 extension MainViewController {
 
@@ -41,7 +81,6 @@ extension MainViewController {
         let titleLabel = UILabel()
         titleLabel.textColor = .white
         titleLabel.text = "\(Date())" // dateformatter로 양식 재변경
-//        titleLabel.text = "실시간 현시간"
         titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
         self.navigationItem.leftBarButtonItem = UIBarButtonItem.init(customView: titleLabel)
     }

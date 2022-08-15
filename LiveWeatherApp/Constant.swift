@@ -34,6 +34,7 @@ extension UITableViewCell: ReusableProtocol {
 
 // MARK: - 이미지
 enum ImageName: String {
+    case location = "location.fill"
     case upload = "square.and.arrow.up"
     case plus = "plus"
     case setting = "gearshape.fill"
