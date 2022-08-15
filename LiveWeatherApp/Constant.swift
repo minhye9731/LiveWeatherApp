@@ -41,4 +41,5 @@ enum ImageName: String {
     case temperature = "thermometer"
     case wind = "wind"
     case humidity = "humidity"
+    case down = "chevron.down"
 }
