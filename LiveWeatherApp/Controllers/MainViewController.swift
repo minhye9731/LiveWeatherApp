@@ -44,6 +44,9 @@ class MainViewController: UIViewController {
         setNavigationBar()
         self.navigationItem.title = ""
 
+        WeatherAPIManager.shared.fetchWeatherAPI(type: .data, latitude: 37.779507, longitude: 128.877476) { result in
+            print(result)
+        }
         
     }
     
