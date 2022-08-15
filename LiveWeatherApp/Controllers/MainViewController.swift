@@ -8,6 +8,7 @@
 import UIKit
 import MapKit
 import Kingfisher
+import CoreLocation
 
 class MainViewController: UIViewController {
     
@@ -38,6 +39,9 @@ class MainViewController: UIViewController {
     
     @IBOutlet weak var downscrollButton: UIButton!
     
+    let locationManager = CLLocationManager()
+    var latitudeData: Double = 0.0
+    var longitudeData: Double = 0.0
     var data: WeatherModel = WeatherModel(icon: "", weather: "", weatherDetail: "", temperature: 0.0, temperatureFeel: 0.0, temperatureMin: 0.0, temperatureMax: 0.0, humidity: 0, windSpeed: 0.0, windDeg: 0, country: " ", cityname: " ")
     
     override func viewDidLoad() {
@@ -46,15 +50,22 @@ class MainViewController: UIViewController {
         view.backgroundColor = .systemPink
         self.navigationItem.title = ""
         setNavigationBar()
+        setUIAndData()
         
-        fetchWeatherData(type: .image)
+        locationManager.delegate = self
+
+        let center = CLLocationCoordinate2D(latitude: 37.523844, longitude: 126.980249)
+        setRegionAndAnnotation(center: center)
+        fetchWeatherData(type: .image, lat: center.latitude, long: center.longitude)
         
+        
+    }
+    
+    func setUIAndData() {
         configureImage()
         setLabelUI()
         setViewUI()
         setButtonUI()
-        
-        
     }
     
     func configureImage() {
@@ -137,9 +148,9 @@ class MainViewController: UIViewController {
     
     // MARK: - API 통신 (weather api)
     // 여기에 위도경도 데이터를 매개변수로 넣어야해
-    func fetchWeatherData(type: Endpoint) {
+    func fetchWeatherData(type: Endpoint, lat: Double, long: Double) {
         
-        WeatherAPIManager.shared.fetchWeatherAPI(type: .data, latitude: 37.779507, longitude: 128.877476) { weatherData in
+        WeatherAPIManager.shared.fetchWeatherAPI(type: .data, latitude: lat, longitude: long) { weatherData in
             
             self.data = weatherData
             
@@ -151,14 +162,116 @@ class MainViewController: UIViewController {
         
     }
     
-    
-    
-
+    // MARK: - 지도내 핀설정
+    func setRegionAndAnnotation(center: CLLocationCoordinate2D) {
+        let region = MKCoordinateRegion(center: center, latitudinalMeters: 20000, longitudinalMeters: 20000)
+        mapView.setRegion(region, animated: true)
+        
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = center
+        annotation.title = "현위치"
+        
+        mapView.addAnnotation(annotation)
+    }
 }
 
 
 
+// MARK: - CLLocationManagerDelegate 프로토콜 선언
+extension MainViewController: CLLocationManagerDelegate {
+    // 사용자의 위치를 성공적으로 가지고 온 경우
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        print(#function, locations)
+        
+        if let coordinate = locations.last?.coordinate {
+            setRegionAndAnnotation(center: coordinate)
+            
+//            self.latitudeData = coordinate.latitude
+//            self.longitudeData = coordinate.longitude
+//
+//            fetchWeatherData(type: .image, lat: latitudeData, long: longitudeData)
+            
+        }
+        locationManager.stopUpdatingLocation()
+    }
+    
+    // 사용자의 위치를 못 가지고 온 경우
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print(#function)
+    }
+    
+    // 사용자의 권한 상태가 바뀔 경우
+        // iOS 14 이상
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        checkUserDeviceLocationServiceAuthorization()
+    }
+//        // iOS 14 미만
+//    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+//    checkUserDeviceLocationServiceAuthorization()
+//    }
+}
 
+// MARK: - 위치 관련된 User Defined 메서드
+extension MainViewController {
+    
+    // iOS 위치 서비스 활성화여부 확인
+    func checkUserDeviceLocationServiceAuthorization() {
+        
+        let authorizationStatus: CLAuthorizationStatus
+     
+        if #available(iOS 14.0, *) {
+            authorizationStatus = locationManager.authorizationStatus
+        } else {
+            authorizationStatus = CLLocationManager.authorizationStatus()
+        }
+        
+        if CLLocationManager.locationServicesEnabled() {
+            checkUserCurrentLocationAuthorization(authorizationStatus)
+        } else {
+            print("위치 서비스가 꺼져 있어서 위치 권한 요청을 못합니다.")
+        }
+    }
+
+    func checkUserCurrentLocationAuthorization(_ authorizationStatus: CLAuthorizationStatus) {
+        switch authorizationStatus {
+        case .notDetermined:
+            print("NOTDETERMINED")
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+            locationManager.requestWhenInUseAuthorization() // 위치 권한요청 팝업
+            
+        case .restricted, .denied:
+            print("DENIED, 국립중앙박물관이 현위치가 되도록 임시 설정")
+//            let center = CLLocationCoordinate2D(latitude: 37.523844, longitude: 126.980249)
+//            setRegionAndAnnotation(center: center)
+//            fetchWeatherData(type: .image, lat: center.latitude, long: center.longitude)
+            
+            
+        case .authorizedWhenInUse:
+            print("WHEN IN USE")
+            locationManager.startUpdatingLocation()
+//            let center = CLLocationCoordinate2D(latitude: self.locationManager.location?.coordinate.latitude ?? 37.523844, longitude: self.locationManager.location?.coordinate.longitude ?? 126.980249)
+//            setRegionAndAnnotation(center: center)
+//            fetchWeatherData(type: .image, lat: center.latitude, long: center.longitude)
+            
+        default:
+            print("DEFAULT")
+            locationManager.startUpdatingLocation()
+        }
+    }
+}
+
+// MARK: - 지도관련 설정
+extension MainViewController: MKMapViewDelegate {
+    
+    // 이거 실행한거 함수명을 보려면 map delegate 설정이 필요
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        print(#function)
+        locationManager.startUpdatingLocation()
+    }
+
+}
+
+// MARK: - navigation 설정
 extension MainViewController {
 
     func setNavigationBar() {
@@ -169,7 +282,6 @@ extension MainViewController {
     }
     
     func configureNavigationTitle() {
-        
         
         let titleLabel = UILabel()
         titleLabel.textColor = .white
